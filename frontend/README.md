@@ -24,7 +24,7 @@ npm install
 npm run dev
 ```
 
-La aplicación queda en `http://127.0.0.1:5173`. Vite hace proxy de `/api` al
+La aplicación queda en `http://127.0.0.1:5174`. Vite hace proxy de `/api` al
 backend, por lo que no hace falta configurar CORS en desarrollo.
 
 Credenciales demo:

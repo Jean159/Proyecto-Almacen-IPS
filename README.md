@@ -44,7 +44,7 @@ npm run dev
 ```
 
 La base de datos de desarrollo escucha en `127.0.0.1:5434` para no chocar con
-otros proyectos PostgreSQL. El frontend queda en `http://127.0.0.1:5173` y
+otros proyectos PostgreSQL. El frontend queda en `http://127.0.0.1:5174` y
 usa el proxy de Vite hacia el backend en `8001`.
 
 Credenciales demo:
