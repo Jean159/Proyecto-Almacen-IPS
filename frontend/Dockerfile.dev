@@ -1,0 +1,19 @@
+# ==============================================================================
+# Dockerfile para Frontend (Desarrollo con Vite Hot-Reloading)
+# ==============================================================================
+
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Instalar dependencias
+COPY package*.json ./
+RUN npm install
+
+# Copiar resto del código
+COPY . .
+
+EXPOSE 5174
+
+# Iniciar servidor Vite escuchando en todas las interfaces de red
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5174"]

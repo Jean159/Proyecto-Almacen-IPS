@@ -1,5 +1,23 @@
-.PHONY: up down migrate makemigrations seed seed-demo test lint run shell front-install front-dev front-build front-test front-lint
+.PHONY: up down migrate makemigrations seed seed-demo test lint run shell front-install front-dev front-build front-test front-lint docker-dev docker-prod docker-down docker-logs docker-seed
 
+# Comandos Docker DevOps (Recomendados)
+docker-dev:
+	docker compose up -d --build
+
+docker-prod:
+	docker compose -f docker-compose.prod.yml up -d --build
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f
+
+docker-seed:
+	docker compose exec backend python manage.py seed_sunat
+	docker compose exec backend python manage.py seed_demo
+
+# Comandos locales individuales
 up:
 	docker compose up -d db
 
