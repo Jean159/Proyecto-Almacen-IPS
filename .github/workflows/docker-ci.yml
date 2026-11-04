@@ -1,0 +1,60 @@
+name: docker-ci
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose*.yml"
+      - ".github/workflows/docker-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose*.yml"
+      - ".github/workflows/docker-ci.yml"
+
+jobs:
+  docker-build:
+    name: Validate Docker Images Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: erp-almacen-backend:test
+
+      - name: Build Frontend Production Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: erp-almacen-frontend:test
+
+  deploy-notify:
+    name: CD Deploy Webhook Notification
+    needs: docker-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Cloud (Render / Vercel Webhook)
+        run: |
+          echo "[DevOps CD] Push detectado en main. Disparando despliegues automáticos..."
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+            echo "[DevOps CD] Webhook Render disparado con éxito."
+          else
+            echo "[DevOps CD] RENDER_DEPLOY_HOOK no configurado en GitHub Secrets (opcional)."
+          fi

@@ -17,3 +17,5 @@ dist/
 # Documentos internos de trabajo
 /requerimientos_areas_principales_almacen.md
 /spec_modulo_almacen_ia.md
+~$*
+*.tmp

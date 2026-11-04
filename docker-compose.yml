@@ -1,7 +1,18 @@
+# ==============================================================================
+# Docker Compose para Desarrollo Local Orquestado
+# ERP Almacén e Inventarios - Tribu 2 (Equipo 2)
+#
+# Uso:
+#   docker compose up -d --build
+#   docker compose down
+#   docker compose logs -f
+# ==============================================================================
+
 services:
   db:
     image: postgres:16-alpine
     container_name: erp-almacen-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: erp_almacen
       POSTGRES_USER: erp_almacen
@@ -15,6 +26,57 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - erp-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: erp-almacen-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DJANGO_SECRET_KEY=dev-secret-key-erp-almacen-2026
+      - DJANGO_DEBUG=1
+      - POSTGRES_DB=erp_almacen
+      - POSTGRES_USER=erp_almacen
+      - POSTGRES_PASSWORD=erp_almacen
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - CORS_ALLOWED_ORIGINS=http://localhost:5174,http://127.0.0.1:5174,http://localhost:5173
+      - SEED_ON_STARTUP=0
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - erp-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: erp-almacen-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=/api/v1
+    ports:
+      - "5174:5174"
+    depends_on:
+      - backend
+    networks:
+      - erp-network
 
 volumes:
   erp_almacen_pgdata:
+
+networks:
+  erp-network:
+    driver: bridge

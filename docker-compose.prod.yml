@@ -1,0 +1,72 @@
+# ==============================================================================
+# Docker Compose para Producción / Staging
+# ERP Almacén e Inventarios - Tribu 2 (Equipo 2)
+#
+# Uso:
+#   docker compose -f docker-compose.prod.yml up -d --build
+# ==============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: erp-almacen-db-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-erp_almacen}
+      POSTGRES_USER: ${POSTGRES_USER:-erp_almacen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_almacen_secure_pass_2026}
+    volumes:
+      - erp_almacen_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_almacen -d erp_almacen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - erp-network-prod
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: erp-almacen-backend-prod
+    restart: always
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "60"]
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-prod-secret-key-erp-almacen-2026}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,frontend}
+      - POSTGRES_DB=${POSTGRES_DB:-erp_almacen}
+      - POSTGRES_USER=${POSTGRES_USER:-erp_almacen}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-erp_almacen_secure_pass_2026}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - SEED_ON_STARTUP=1
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - erp-network-prod
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api/v1
+    container_name: erp-almacen-frontend-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - erp-network-prod
+
+volumes:
+  erp_almacen_pgdata_prod:
+
+networks:
+  erp-network-prod:
+    driver: bridge
