@@ -1,0 +1,46 @@
+.PHONY: up down migrate makemigrations seed seed-demo test lint run shell front-install front-dev front-build front-test front-lint
+
+up:
+	docker compose up -d db
+
+down:
+	docker compose down
+
+migrate:
+	cd backend && .venv/bin/python manage.py migrate
+
+makemigrations:
+	cd backend && .venv/bin/python manage.py makemigrations
+
+seed:
+	cd backend && .venv/bin/python manage.py seed_sunat
+
+seed-demo:
+	cd backend && .venv/bin/python manage.py seed_demo
+
+test:
+	cd backend && .venv/bin/pytest
+
+lint:
+	cd backend && .venv/bin/ruff check .
+
+run:
+	cd backend && .venv/bin/python manage.py runserver 0.0.0.0:8001
+
+shell:
+	cd backend && .venv/bin/python manage.py shell
+
+front-install:
+	cd frontend && npm install
+
+front-dev:
+	cd frontend && npm run dev
+
+front-build:
+	cd frontend && npm run build
+
+front-test:
+	cd frontend && npm test
+
+front-lint:
+	cd frontend && npm run lint
