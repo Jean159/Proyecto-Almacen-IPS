@@ -4,12 +4,15 @@ on:
   push:
     paths:
       - "backend/**"
+      - ".github/workflows/backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - ".github/workflows/backend.yml"
 
 jobs:
   test:
+    name: Backend CI (Lint, Migrations & Tests)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -37,12 +40,26 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
-      - run: python manage.py migrate --settings=config.settings.dev
-      - run: ruff check .
-      - run: pytest
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Verify no missing migrations (DevOps Quality Gate)
+        run: python manage.py makemigrations --check --dry-run --settings=config.settings.dev
+
+      - name: Run migrations
+        run: python manage.py migrate --settings=config.settings.dev
+
+      - name: Run unit and integration tests
+        run: pytest
